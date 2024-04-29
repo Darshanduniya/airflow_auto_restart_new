@@ -1,0 +1,16 @@
+import getpass
+
+def login():
+    username = "dsses"
+    password = "Happy"
+
+    entered_username = input("Enter username: ")
+    entered_password = getpass.getpass("Enter password: ")
+
+    if entered_username == username and entered_password == password:
+        print("Login successful!")
+    else:
+        print("Invalid username or password.")
+
+if __name__ == "__main__":
+    login()
