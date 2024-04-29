@@ -1,0 +1,18 @@
+import subprocess
+
+def switch_user(username, password):
+    # Start the 'su' command with the specified username
+    su_process = subprocess.Popen(['su', username], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Communicate with the 'su' process to interact with its input/output
+    output, error = su_process.communicate(input=(password + '\n').encode())
+
+    # Print the output and error (if any) from the 'su' command
+    print(output.decode())
+    print(error.decode())
+
+if __name__ == "__main__":
+    username = "dsses"
+    password = "YourPasswordHere"  # Replace with the actual password
+
+    switch_user(username, password)
