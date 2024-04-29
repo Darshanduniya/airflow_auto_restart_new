@@ -1,0 +1,26 @@
+import subprocess
+
+def execute_command(command, password):
+    try:
+        proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        proc.stdin.write((password + '\n').encode())
+        proc.stdin.flush()
+        
+        stdout, stderr = proc.communicate()
+
+        if proc.returncode == 0:
+            print(f"Command '{command}' executed successfully.")
+        else:
+            print(f"Error executing command '{command}':")
+            print(stderr.decode())
+    except Exception as e:
+        print("An error occurred:", str(e))
+
+# Execute 'su darsh'
+execute_command("su darsh", "duniya")
+
+# Execute 'iroot'
+execute_command("iroot", "duniya")
+
+# Execute 'pwd'
+execute_command("pwd", "duniya")
