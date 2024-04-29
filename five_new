@@ -1,0 +1,19 @@
+import subprocess
+
+def switch_user(username, password):
+    command = f'echo "{password}" | su - {username}'
+    process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = process.communicate()
+    return out.decode(), err.decode()
+
+# Example usage
+username = "desired_username"
+password = "desired_password"
+
+out, err = switch_user(username, password)
+
+if err:
+    print("Error:", err)
+else:
+    print("Switched user successfully.")
+    print("Output:", out)
