@@ -1,0 +1,11 @@
+import subprocess
+
+def switch_user(username, password):
+    try:
+        # Run the su command to switch user
+        subprocess.run(['su', username], input=password.encode(), check=True)
+    except subprocess.CalledProcessError as e:
+        print("Error:", e)
+
+# Usage: switch_user('dsses', 'Happy')
+switch_user('dsses', 'Happy')
