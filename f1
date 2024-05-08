@@ -1,0 +1,55 @@
+from datetime import datetime, timedelta
+from airflow import DAG
+from airflow.operators.ssh_operator import SSHOperator
+from airflow.models import XCom
+import pymonetdb
+
+# Define the SSH connection parameters
+ssh_conn_id = 'my_ssh_connection'  # This should match the connection defined in Airflow UI
+
+# Define the default arguments for the DAG
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 5, 7),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+# Define the DAG
+dag = DAG('hello_airflow_ssh', default_args=default_args, schedule_interval='@once')
+
+
+INDUSTRY = "{{dag_run.conf['INDUSTRY']}}"
+
+def fetch_details(INDUSTRY, **kwargs):
+    conn = pymonetdb.connect(username='dar', password='Pass', hostname='lnx9887.ch7.com', port=5023, database='DB_TKD_RAK')
+    cursor = conn.cursor()
+    query = '''select offline_mart from "country"'''
+    cursor.execute(query)
+    STACK = cursor.fetchone()[0]
+    print(STACK)
+    kwargs['ti'].xcom_push(key='STACK', value=STACK)  # Pushing STACK value to XCom
+
+
+fetch = SSHOperator(
+    task_id='fetch',
+    python_callable=fetch_details,
+    op_kwargs={"INDUSTRY": INDUSTRY},
+    provide_context=True,  # This is required to access task instance context
+    dag=dag,
+)
+
+
+# Define the SSH task
+task_ssh = SSHOperator(
+    task_id='execute_remote_command',
+    ssh_conn_id=ssh_conn_id,
+    command='python3 /home/dar/test1.py {{ dag_run.conf["INDUSTRY"] }} {{ ti.xcom_pull(task_ids="fetch", key="STACK") }}',  # Pulling STACK value from XCom
+    dag=dag,
+)
+
+# Define the task dependencies (if any)
+fetch >> task_ssh
