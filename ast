@@ -1,0 +1,25 @@
+# Define the Python callable that will be used in the PythonOperator
+def generate_parameter(**kwargs):
+    # Generate the parameter to be passed to the SSHOperator
+    parameter = "value_to_pass"
+    # Push the parameter to XCom
+    kwargs['ti'].xcom_push(key='parameter', value=parameter)
+
+# Define the PythonOperator
+task1 = PythonOperator(
+    task_id='generate_parameter_task',
+    python_callable=generate_parameter,
+    provide_context=True,
+    dag=dag,
+)
+
+# Define the SSHOperator
+task2 = SSHOperator(
+    task_id='execute_ssh_command',
+    ssh_conn_id='ssh_default',
+    command='echo "{{ ti.xcom_pull(task_ids="generate_parameter_task", key="parameter") }}"',
+    dag=dag,
+)
+
+# Set task dependencies
+task1 >> task2
