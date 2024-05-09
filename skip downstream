@@ -1,0 +1,90 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.operators.dummy import DummyOperator
+from datetime import datetime
+import pymonetdb
+
+def connect_and_fetch_model(**kwargs):
+    connection = pymonetdb.connect(username='myuser', password='mypassword', hostname='myhost', database='mydatabase')
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM models")  # Replace with your actual query
+    models = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    if len(models) > 1:
+        return 'run_downstream_tasks'
+    return 'skip_downstream_tasks'
+
+def task2(**kwargs):
+    # Task 2 logic goes here
+    pass
+
+def task3(**kwargs):
+    # Task 3 logic goes here
+    pass
+
+def task4(**kwargs):
+    # Task 4 logic goes here
+    pass
+
+with DAG(
+    'conditional_downstream_dag',
+    default_args={
+        'owner': 'airflow',
+        'depends_on_past': False,
+        'start_date': datetime(2023, 1, 1),
+        'retries': 1,
+    },
+    description='A DAG with conditional downstream tasks',
+    schedule_interval=None,
+    catchup=False,
+    tags=['example'],
+) as dag:
+
+    task1 = PythonOperator(
+        task_id='connect_and_fetch_model',
+        python_callable=connect_and_fetch_model,
+        provide_context=True,
+    )
+
+    branch = BranchPythonOperator(
+        task_id='branching',
+        python_callable=connect_and_fetch_model,
+        provide_context=True,
+    )
+
+    run_downstream_tasks = DummyOperator(
+        task_id='run_downstream_tasks',
+    )
+
+    skip_downstream_tasks = DummyOperator(
+        task_id='skip_downstream_tasks',
+        trigger_rule='none_failed_or_skipped',
+    )
+
+    task2 = PythonOperator(
+        task_id='task2',
+        python_callable=task2,
+        provide_context=True,
+    )
+
+    task3 = PythonOperator(
+        task_id='task3',
+        python_callable=task3,
+        provide_context=True,
+    )
+
+    task4 = PythonOperator(
+        task_id='task4',
+        python_callable=task4,
+        provide_context=True,
+    )
+
+    end = DummyOperator(
+        task_id='end',
+        trigger_rule='none_failed_or_skipped',
+    )
+
+    task1 >> branch
+    branch >> run_downstream_tasks >> [task2, task3, task4] >> end
+    branch >> skip_downstream_tasks >> end
