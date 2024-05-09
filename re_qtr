@@ -1,0 +1,18 @@
+import re
+
+# Given model_list
+model_list = 'tkd_dun,rak_qtr'
+
+# Split the model_list by comma and create a list
+models = model_list.split(',')
+
+# Check if any model contains 'QTR' and assign those to model_three, others to model_two
+model_three = [model for model in models if re.search(r'QTR', model, re.IGNORECASE)]
+model_two = [model for model in models if model not in model_three]
+
+# Join the lists back to strings if needed
+model_three = ','.join(model_three)
+model_two = ','.join(model_two)
+
+print("Model Three:", model_three)
+print("Model Two:", model_two)
