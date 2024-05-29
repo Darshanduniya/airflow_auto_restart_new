@@ -1,0 +1,36 @@
+import subprocess
+
+def execute_command(command):
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            print("Connected to db")
+            return True
+        else:
+            print("Failed to connect to db")
+            print(result.stderr)
+            return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
+def check_db_status(command):
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode == 0 and '1' in result.stdout:
+            print("DB is up and running")
+        else:
+            print("DB is down")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Command to connect to the database
+connection_command = "mclient -h lnx8767.ch3.prod.i.com -d DB_TKD_PRD_USA -u USR_NPD_OPD_P -p 50024"
+
+# Command to execute a query
+query_command = f'{connection_command} -e "select 1"'
+
+# Execute the connection command
+if execute_command(connection_command):
+    # If connected, check the database status
+    check_db_status(query_command)
